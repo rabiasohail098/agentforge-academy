@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentForge Academy – Quiz</title>
+<style>
+:root {
+  --bg: #0f0f1a;
+  --bg2: #161628;
+  --card: rgba(255,255,255,0.05);
+  --card-border: rgba(255,255,255,0.1);
+  --primary: #7c3aed;
+  --primary-light: #a855f7;
+  --accent: #06b6d4;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --glass: rgba(255,255,255,0.04);
+  --shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+.light {
+  --bg: #f0f4ff;
+  --bg2: #e8edff;
+  --card: rgba(255,255,255,0.8);
+  --card-border: rgba(0,0,0,0.1);
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --glass: rgba(255,255,255,0.6);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+}
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background: radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.15) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(6,182,212,0.1) 0%, transparent 50%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Layout */
+.app { display:flex; min-height:100vh; position:relative; z-index:1; }
+.sidebar {
+  width:240px;
+  background: rgba(255,255,255,0.03);
+  border-right: 1px solid var(--card-border);
+  backdrop-filter: blur(20px);
+  display:flex;
+  flex-direction:column;
+  padding:24px 16px;
+  position:fixed;
+  top:0; left:0; bottom:0;
+  z-index:10;
+  transition: transform 0.3s;
+}
+.sidebar-logo {
+  display:flex; align-items:center; gap:10px;
+  margin-bottom:32px; padding:0 8px;
+}
+.sidebar-logo .icon {
+  width:36px; height:36px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+}
+.sidebar-logo span { font-weight:700; font-size:15px; line-height:1.2; }
+.sidebar-logo small { color: var(--text-muted); font-size:11px; }
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:10px;
+  cursor:pointer; color: var(--text-muted);
+  font-size:14px; font-weight:500;
+  transition:all 0.2s; margin-bottom:4px;
+  border:none; background:none; width:100%; text-align:left;
+}
+.nav-item:hover { background: var(--card); color: var(--text); }
+.nav-item.active { background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(6,182,212,0.1)); color: var(--text); }
+.nav-item .nav-icon { font-size:18px; width:22px; text-align:center; }
+.sidebar-footer { margin-top:auto; }
+.theme-btn {
+  width:100%; padding:10px 12px;
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius:10px; color: var(--text-muted);
+  cursor:pointer; font-size:13px;
+  display:flex; align-items:center; gap:8px;
+  transition:all 0.2s;
+}
+.theme-btn:hover { color: var(--text); }
+
+.main {
+  margin-left:240px;
+  flex:1;
+  padding:32px;
+  max-width:900px;
+  width:100%;
+}
+
+/* Screen management */
+.screen { display:none; animation: fadeIn 0.4s ease; }
+.screen.active { display:block; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(16px)} to{opacity:1; transform:translateY(0)} }
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius:20px;
+  backdrop-filter: blur(20px);
+  padding:28px;
+  transition:all 0.3s;
+}
+.card:hover { border-color: rgba(124,58,237,0.4); transform:translateY(-2px); }
+
+/* Home Screen */
+.hero {
+  text-align:center;
+  padding:48px 24px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(6,182,212,0.08));
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius:24px;
+  margin-bottom:32px;
+}
+.hero h1 { font-size:2.4rem; font-weight:800; margin-bottom:12px; }
+.hero h1 span { background: linear-gradient(135deg, var(--primary-light), var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero p { color: var(--text-muted); font-size:1.05rem; max-width:520px; margin:0 auto 28px; line-height:1.7; }
+.btn {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:12px 28px; border-radius:12px;
+  font-size:15px; font-weight:600;
+  border:none; cursor:pointer;
+  transition:all 0.25s;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color:#fff;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+}
+.btn-primary:hover { transform:translateY(-2px); box-shadow: 0 8px 30px rgba(124,58,237,0.5); }
+.btn-outline {
+  background:transparent;
+  border: 1px solid var(--card-border);
+  color: var(--text);
+}
+.btn-outline:hover { border-color: var(--primary); background: rgba(124,58,237,0.1); }
+
+.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px; }
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius:16px;
+  padding:20px;
+  text-align:center;
+  backdrop-filter:blur(10px);
+}
+.stat-num { font-size:2rem; font-weight:800; }
+.stat-num.purple { color: var(--primary-light); }
+.stat-num.cyan { color: var(--accent); }
+.stat-num.green { color: var(--success); }
+.stat-label { color: var(--text-muted); font-size:13px; margin-top:4px; }
+
+.chapter-cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:20px; }
+.chapter-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius:20px;
+  padding:24px;
+  cursor:pointer;
+  transition:all 0.3s;
+  backdrop-filter:blur(10px);
+}
+.chapter-card:hover { border-color: var(--primary); transform:translateY(-4px); box-shadow: 0 20px 40px rgba(124,58,237,0.2); }
+.ch-icon { font-size:2.5rem; margin-bottom:12px; }
+.ch-title { font-weight:700; font-size:1.05rem; margin-bottom:8px; }
+.ch-desc { color: var(--text-muted); font-size:13px; line-height:1.6; margin-bottom:16px; }
+.ch-meta { display:flex; gap:8px; flex-wrap:wrap; }
+.badge {
+  background: rgba(124,58,237,0.15);
+  color: var(--primary-light);
+  border: 1px solid rgba(124,58,237,0.2);
+  padding:3px 10px; border-radius:20px;
+  font-size:11px; font-weight:600;
+}
+.badge.cyan { background:rgba(6,182,212,0.1); color:var(--accent); border-color:rgba(6,182,212,0.2); }
+.badge.green { background:rgba(16,185,129,0.1); color:var(--success); border-color:rgba(16,185,129,0.2); }
+
+/* Mode Screen */
+.mode-header { margin-bottom:28px; }
+.mode-header h2 { font-size:1.8rem; font-weight:700; }
+.mode-header p { color: var(--text-muted); margin-top:6px; }
+.back-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  color: var(--text-muted); cursor:pointer;
+  font-size:14px; border:none; background:none;
+  margin-bottom:20px; transition:color 0.2s;
+}
+.back-btn:hover { color: var(--text); }
+
+.modes-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:16px; }
+.mode-card {
+  background: var(--card);
+  border: 2px solid var(--card-border);
+  border-radius:20px;
+  padding:24px;
+  cursor:pointer;
+  transition:all 0.3s;
+  text-align:center;
+  backdrop-filter:blur(10px);
+}
+.mode-card:hover { transform:translateY(-4px); }
+.mode-card.easy:hover  { border-color:var(--success); box-shadow:0 10px 30px rgba(16,185,129,0.2); }
+.mode-card.medium:hover { border-color:var(--warning); box-shadow:0 10px 30px rgba(245,158,11,0.2); }
+.mode-card.hard:hover  { border-color:var(--danger); box-shadow:0 10px 30px rgba(239,68,68,0.2); }
+.mode-card.easy.selected  { border-color:var(--success); background:rgba(16,185,129,0.1); }
+.mode-card.medium.selected { border-color:var(--warning); background:rgba(245,158,11,0.1); }
+.mode-card.hard.selected  { border-color:var(--danger);  background:rgba(239,68,68,0.1); }
+.mode-icon { font-size:2.2rem; margin-bottom:10px; }
+.mode-title { font-weight:700; font-size:1.1rem; margin-bottom:8px; }
+.mode-detail { color: var(--text-muted); font-size:13px; line-height:1.6; }
+.mode-tag { display:inline-block; margin-top:10px; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+.easy .mode-tag  { background:rgba(16,185,129,0.15); color:var(--success); }
+.medium .mode-tag { background:rgba(245,158,11,0.15); color:var(--warning); }
+.hard .mode-tag  { background:rgba(239,68,68,0.15);  color:var(--danger); }
+
+/* Quiz Screen */
+.quiz-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:24px; flex-wrap:wrap; gap:12px;
+}
+.quiz-meta { display:flex; flex-direction:column; gap:2px; }
+.quiz-meta h3 { font-size:1rem; font-weight:600; }
+.quiz-meta span { color: var(--text-muted); font-size:13px; }
+.timer-box {
+  display:flex; align-items:center; gap:8px;
+  background: var(--card); border: 1px solid var(--card-border);
+  padding:8px 16px; border-radius:12px;
+  font-weight:700; font-size:1rem;
+}
+.timer-box.warning { border-color:var(--warning); color:var(--warning); }
+.timer-box.danger  { border-color:var(--danger);  color:var(--danger); animation:pulse 0.5s infinite alternate; }
+@keyframes pulse { from{opacity:1} to{opacity:0.6} }
+
+.progress-bar { height:6px; background:rgba(255,255,255,0.1); border-radius:3px; margin-bottom:24px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--primary),var(--accent)); border-radius:3px; transition:width 0.4s ease; }
+
+.question-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius:20px;
+  padding:32px;
+  backdrop-filter:blur(20px);
+  margin-bottom:20px;
+}
+.q-num { color: var(--text-muted); font-size:13px; margin-bottom:12px; font-weight:600; letter-spacing:0.5px; }
+.q-text { font-size:1.1rem; font-weight:600; line-height:1.7; }
+.options { display:flex; flex-direction:column; gap:10px; margin-top:24px; }
+.option {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 18px; border-radius:14px;
+  border: 1px solid var(--card-border);
+  background: rgba(255,255,255,0.02);
+  cursor:pointer; transition:all 0.2s;
+  font-size:14px; line-height:1.5;
+}
+.option:hover:not(.disabled) { border-color: var(--primary); background:rgba(124,58,237,0.08); transform:translateX(4px); }
+.option.correct { border-color:var(--success)!important; background:rgba(16,185,129,0.12)!important; color:var(--success); }
+.option.wrong   { border-color:var(--danger)!important;  background:rgba(239,68,68,0.12)!important;  color:var(--danger); }
+.option.disabled { cursor:not-allowed; }
+.opt-label {
+  width:28px; height:28px; border-radius:8px; flex-shrink:0;
+  background: rgba(255,255,255,0.08);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:13px;
+}
+.option.correct .opt-label { background:var(--success); color:#fff; }
+.option.wrong   .opt-label { background:var(--danger);  color:#fff; }
+
+.feedback-box {
+  padding:16px 20px; border-radius:14px;
+  font-size:14px; line-height:1.6;
+  margin-top:16px; display:none;
+}
+.feedback-box.show { display:block; animation:fadeIn 0.3s; }
+.feedback-box.correct { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); }
+.feedback-box.wrong   { background:rgba(239,68,68,0.1);  border:1px solid rgba(239,68,68,0.3); }
+.feedback-title { font-weight:700; margin-bottom:4px; }
+.feedback-title.correct { color:var(--success); }
+.feedback-title.wrong   { color:var(--danger); }
+
+.quiz-footer { display:flex; justify-content:flex-end; gap:12px; }
+
+/* Results Screen */
+.results-hero {
+  text-align:center; padding:40px 24px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(6,182,212,0.08));
+  border:1px solid rgba(124,58,237,0.2);
+  border-radius:24px; margin-bottom:28px;
+}
+.score-ring {
+  width:120px; height:120px; border-radius:50%;
+  border: 4px solid rgba(255,255,255,0.1);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  margin:0 auto 20px;
+  position:relative;
+}
+.score-ring::before {
+  content:'';
+  position:absolute; inset:0;
+  border-radius:50%;
+  border: 4px solid transparent;
+}
+.score-pct { font-size:2rem; font-weight:800; }
+.score-pct.grade-a { color:var(--success); }
+.score-pct.grade-b { color:var(--accent); }
+.score-pct.grade-c { color:var(--warning); }
+.score-pct.grade-d { color:var(--danger); }
+.score-label { font-size:12px; color:var(--text-muted); }
+.results-title { font-size:1.6rem; font-weight:700; margin-bottom:8px; }
+.results-sub { color:var(--text-muted); }
+
+.results-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+.res-stat { background:var(--card); border:1px solid var(--card-border); border-radius:14px; padding:16px; text-align:center; }
+.res-stat-num { font-size:1.5rem; font-weight:700; }
+.res-stat-lbl { color:var(--text-muted); font-size:12px; margin-top:4px; }
+
+.review-list { display:flex; flex-direction:column; gap:16px; }
+.review-item {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius:16px; padding:20px;
+  backdrop-filter:blur(10px);
+}
+.review-item.r-correct { border-left: 3px solid var(--success); }
+.review-item.r-wrong   { border-left: 3px solid var(--danger); }
+.review-q { font-weight:600; font-size:14px; margin-bottom:10px; }
+.review-opts { display:flex; flex-direction:column; gap:6px; }
+.review-opt { padding:8px 12px; border-radius:8px; font-size:13px; }
+.review-opt.r-correct { background:rgba(16,185,129,0.1); color:var(--success); }
+.review-opt.r-wrong   { background:rgba(239,68,68,0.1); color:var(--danger); }
+.review-opt.r-selected-wrong { background:rgba(239,68,68,0.15); color:var(--danger); text-decoration:line-through; }
+.review-expl { margin-top:10px; font-size:13px; color:var(--text-muted); padding:10px 14px; background:rgba(255,255,255,0.03); border-radius:8px; line-height:1.6; }
+
+/* Leaderboard */
+.lb-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+.lb-list { display:flex; flex-direction:column; gap:10px; }
+.lb-item {
+  display:flex; align-items:center; gap:16px;
+  background: var(--card); border:1px solid var(--card-border);
+  border-radius:14px; padding:16px 20px;
+  transition:all 0.2s;
+}
+.lb-item:hover { transform:translateX(4px); border-color:rgba(124,58,237,0.3); }
+.lb-item.top1 { border-color:rgba(255,215,0,0.4); background:rgba(255,215,0,0.05); }
+.lb-item.top2 { border-color:rgba(192,192,192,0.4); }
+.lb-item.top3 { border-color:rgba(205,127,50,0.4); }
+.lb-rank { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; flex-shrink:0; }
+.lb-rank.r1 { background:linear-gradient(135deg,#ffd700,#ffb300); color:#000; }
+.lb-rank.r2 { background:linear-gradient(135deg,#c0c0c0,#a0a0a0); color:#000; }
+.lb-rank.r3 { background:linear-gradient(135deg,#cd7f32,#b06000); color:#fff; }
+.lb-rank.rn { background:rgba(255,255,255,0.08); color:var(--text-muted); }
+.lb-info { flex:1; }
+.lb-name { font-weight:600; font-size:15px; }
+.lb-detail { color:var(--text-muted); font-size:12px; margin-top:2px; }
+.lb-score { font-weight:800; font-size:1.1rem; color:var(--primary-light); }
+
+/* Name modal */
+.modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.7);
+  display:flex; align-items:center; justify-content:center;
+  z-index:100; backdrop-filter:blur(8px);
+  display:none;
+}
+.modal-overlay.open { display:flex; animation:fadeIn 0.2s; }
+.modal {
+  background: var(--bg2); border:1px solid var(--card-border);
+  border-radius:24px; padding:32px;
+  width:380px; max-width:90vw;
+}
+.modal h3 { font-size:1.3rem; font-weight:700; margin-bottom:8px; }
+.modal p { color:var(--text-muted); font-size:14px; margin-bottom:20px; }
+.input-field {
+  width:100%; padding:12px 16px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--card-border);
+  border-radius:12px; color:var(--text);
+  font-size:15px; outline:none;
+  transition:border-color 0.2s;
+}
+.input-field:focus { border-color:var(--primary); }
+.modal-btns { display:flex; gap:10px; margin-top:16px; }
+
+/* Confetti */
+.confetti-piece {
+  position:fixed; pointer-events:none;
+  width:10px; height:10px; border-radius:2px;
+  z-index:200;
+  animation: confetti-fall 3s ease-in forwards;
+}
+@keyframes confetti-fall {
+  0%  { transform:translateY(-100px) rotate(0deg); opacity:1; }
+  100%{ transform:translateY(110vh) rotate(720deg); opacity:0; }
+}
+
+/* Hamburger */
+.menu-btn {
+  display:none; position:fixed; top:16px; left:16px; z-index:50;
+  background:var(--card); border:1px solid var(--card-border);
+  border-radius:10px; padding:8px 10px;
+  cursor:pointer; font-size:20px;
+}
+.sidebar-overlay { display:none; }
+
+@media(max-width:768px){
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); }
+  .sidebar-overlay.open { display:block; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9; }
+  .main { margin-left:0; padding:20px 16px 16px; }
+  .menu-btn { display:flex; }
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+  .results-stats { grid-template-columns:repeat(2,1fr); }
+  .hero h1 { font-size:1.8rem; }
+  .modes-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<button class="menu-btn" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="icon">🔮</div>
+      <div>
+        <span>AgentForge<br>Academy</span>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-item active" id="nav-home" onclick="showScreen('home')">
+        <span class="nav-icon">🏠</span> Home
+      </button>
+      <button class="nav-item" id="nav-quizzes" onclick="showScreen('chapters')">
+        <span class="nav-icon">📝</span> Quizzes
+      </button>
+      <button class="nav-item" id="nav-leaderboard" onclick="showScreen('leaderboard')">
+        <span class="nav-icon">🏆</span> Leaderboard
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="theme-btn" onclick="toggleTheme()">
+        <span id="themeIcon">☀️</span>
+        <span id="themeLabel">Light Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HOME SCREEN -->
+    <div class="screen active" id="screen-home">
+      <div class="hero">
+        <div style="font-size:3rem;margin-bottom:16px;">🔮</div>
+        <h1>AgentForge <span>Academy</span></h1>
+        <p>Master AI-Native Development through interactive quizzes on Agent Factory Paradigm, Markdown, and Claude Code.</p>
+        <button class="btn btn-primary" onclick="showScreen('chapters')">
+          🚀 Start Quiz
+        </button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-num purple">200</div>
+          <div class="stat-label">Total Questions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num cyan">3</div>
+          <div class="stat-label">Chapters</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num green" id="stat-attempts">0</div>
+          <div class="stat-label">Your Attempts</div>
+        </div>
+      </div>
+      <h2 style="margin-bottom:16px;font-size:1.2rem;">Choose a Chapter</h2>
+      <div class="chapter-cards">
+        <div class="chapter-card" onclick="selectChapter(0)">
+          <div class="ch-icon">🏭</div>
+          <div class="ch-title">Agent Factory Paradigm</div>
+          <div class="ch-desc">2025 inflection point, Agent Maturity Model, General vs Custom Agents, Digital FTE strategy.</div>
+          <div class="ch-meta">
+            <span class="badge">70 Questions</span>
+            <span class="badge cyan">Chapter 12</span>
+          </div>
+        </div>
+        <div class="chapter-card" onclick="selectChapter(1)">
+          <div class="ch-icon">📝</div>
+          <div class="ch-title">Markdown Writing</div>
+          <div class="ch-desc">Structured text, headings, lists, code blocks, specs for AI communication.</div>
+          <div class="ch-meta">
+            <span class="badge">70 Questions</span>
+            <span class="badge cyan">Chapter 13</span>
+          </div>
+        </div>
+        <div class="chapter-card" onclick="selectChapter(2)">
+          <div class="ch-icon">🤖</div>
+          <div class="ch-title">General Agents</div>
+          <div class="ch-desc">Claude Code origin, OODA Loop, Cowork, installation, LLM constraints, Agent Skills.</div>
+          <div class="ch-meta">
+            <span class="badge">60 Questions</span>
+            <span class="badge cyan">Chapter 14</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAPTERS SCREEN -->
+    <div class="screen" id="screen-chapters">
+      <button class="back-btn" onclick="showScreen('home')">← Back</button>
+      <div class="mode-header">
+        <h2>Select Chapter</h2>
+        <p>Pick a chapter to start your quiz</p>
+      </div>
+      <div class="chapter-cards">
+        <div class="chapter-card" onclick="selectChapter(0)">
+          <div class="ch-icon">🏭</div>
+          <div class="ch-title">Chapter 12: Agent Factory Paradigm</div>
+          <div class="ch-desc">2025 inflection point, maturity model, Digital FTE, OODA Loop, Spec-Driven Dev.</div>
+          <div class="ch-meta"><span class="badge">70 Questions</span></div>
+        </div>
+        <div class="chapter-card" onclick="selectChapter(1)">
+          <div class="ch-icon">📝</div>
+          <div class="ch-title">Chapter 13: Markdown Writing</div>
+          <div class="ch-desc">Structured specs, headings, lists, code blocks, AIDD intent layer.</div>
+          <div class="ch-meta"><span class="badge">70 Questions</span></div>
+        </div>
+        <div class="chapter-card" onclick="selectChapter(2)">
+          <div class="ch-icon">🤖</div>
+          <div class="ch-title">Chapter 14: General Agents</div>
+          <div class="ch-desc">Claude Code, Cowork, LLM constraints, OODA, installation, Agent Skills.</div>
+          <div class="ch-meta"><span class="badge">60 Questions</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODE SCREEN -->
+    <div class="screen" id="screen-mode">
+      <button class="back-btn" onclick="showScreen('chapters')">← Back</button>
+      <div class="mode-header">
+        <h2 id="mode-chapter-title">Select Difficulty</h2>
+        <p>Choose your challenge level</p>
+      </div>
+      <div class="modes-grid">
+        <div class="mode-card easy" onclick="startQuiz('easy')">
+          <div class="mode-icon">🌱</div>
+          <div class="mode-title">Easy</div>
+          <div class="mode-detail">10 questions<br>20 minutes<br>Basic recall & definitions</div>
+          <div class="mode-tag">BEGINNER</div>
+        </div>
+        <div class="mode-card medium" onclick="startQuiz('medium')">
+          <div class="mode-icon">⚡</div>
+          <div class="mode-title">Medium</div>
+          <div class="mode-detail">15 questions<br>25 minutes<br>Understanding & application</div>
+          <div class="mode-tag">INTERMEDIATE</div>
+        </div>
+        <div class="mode-card hard" onclick="startQuiz('hard')">
+          <div class="mode-icon">🔥</div>
+          <div class="mode-title">Hard</div>
+          <div class="mode-detail">20 questions<br>30 minutes<br>Analysis & deep reasoning</div>
+          <div class="mode-tag">EXPERT</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUIZ SCREEN -->
+    <div class="screen" id="screen-quiz">
+      <div class="quiz-header">
+        <div class="quiz-meta">
+          <h3 id="quiz-chapter-label">Chapter 12</h3>
+          <span id="quiz-mode-label">Easy Mode</span>
+        </div>
+        <div class="timer-box" id="timerBox">
+          ⏱️ <span id="timerDisplay">20:00</span>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">
+        Question <span id="qCurrent">1</span> of <span id="qTotal">10</span>
+      </div>
+
+      <div class="question-card">
+        <div class="q-num" id="qNum">QUESTION 1</div>
+        <div class="q-text" id="qText"></div>
+        <div class="options" id="optionsContainer"></div>
+        <div class="feedback-box" id="feedbackBox">
+          <div class="feedback-title" id="feedbackTitle"></div>
+          <div id="feedbackText"></div>
+        </div>
+      </div>
+
+      <div class="quiz-footer">
+        <button class="btn btn-outline" id="skipBtn" onclick="skipQuestion()">Skip</button>
+        <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" style="display:none">Next →</button>
+      </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div class="screen" id="screen-results">
+      <div class="results-hero">
+        <div class="score-ring" id="scoreRing">
+          <div class="score-pct" id="scorePct">0%</div>
+          <div class="score-label">Score</div>
+        </div>
+        <div class="results-title" id="resultsTitle">Quiz Complete!</div>
+        <div class="results-sub" id="resultsSub"></div>
+      </div>
+      <div class="results-stats">
+        <div class="res-stat"><div class="res-stat-num" style="color:var(--success)" id="resCorrect">0</div><div class="res-stat-lbl">Correct</div></div>
+        <div class="res-stat"><div class="res-stat-num" style="color:var(--danger)" id="resWrong">0</div><div class="res-stat-lbl">Wrong</div></div>
+        <div class="res-stat"><div class="res-stat-num" style="color:var(--warning)" id="resSkipped">0</div><div class="res-stat-lbl">Skipped</div></div>
+        <div class="res-stat"><div class="res-stat-num" style="color:var(--accent)" id="resTime">0s</div><div class="res-stat-lbl">Time Used</div></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="selectChapter(currentChapter)">🔄 Try Again</button>
+        <button class="btn btn-outline" onclick="showScreen('chapters')">📚 Other Chapter</button>
+        <button class="btn btn-outline" onclick="toggleReview()">📋 Review Answers</button>
+        <button class="btn btn-outline" onclick="showScreen('leaderboard')">🏆 Leaderboard</button>
+      </div>
+      <div id="reviewSection" style="display:none">
+        <h3 style="margin-bottom:16px;">Answer Review</h3>
+        <div class="review-list" id="reviewList"></div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD SCREEN -->
+    <div class="screen" id="screen-leaderboard">
+      <div class="lb-header">
+        <div>
+          <h2 style="font-size:1.6rem;font-weight:700;">🏆 Leaderboard</h2>
+          <p style="color:var(--text-muted);margin-top:4px;">Top performers across all chapters</p>
+        </div>
+        <button class="btn btn-outline" onclick="clearLeaderboard()" style="font-size:13px;padding:8px 16px;">Clear</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;" id="lbFilters">
+        <button class="btn btn-primary" style="padding:7px 16px;font-size:13px;" onclick="filterLB('all')">All</button>
+        <button class="btn btn-outline" style="padding:7px 16px;font-size:13px;" onclick="filterLB(0)">Chapter 12</button>
+        <button class="btn btn-outline" style="padding:7px 16px;font-size:13px;" onclick="filterLB(1)">Chapter 13</button>
+        <button class="btn btn-outline" style="padding:7px 16px;font-size:13px;" onclick="filterLB(2)">Chapter 14</button>
+      </div>
+      <div class="lb-list" id="lbList"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Name Modal -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal">
+    <h3>🎉 Great Score!</h3>
+    <p>Enter your name to save your score to the leaderboard.</p>
+    <input class="input-field" id="nameInput" placeholder="Your name..." maxlength="30">
+    <div class="modal-btns">
+      <button class="btn btn-primary" onclick="saveName()">Save Score</button>
+      <button class="btn btn-outline" onclick="closeModal()">Skip</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  QUESTIONS DATABASE
+// ============================================================
+const CHAPTERS = [
+  { name:'Chapter 12: Agent Factory Paradigm', icon:'🏭', short:'Ch.12' },
+  { name:'Chapter 13: Markdown Writing Instructions', icon:'📝', short:'Ch.13' },
+  { name:'Chapter 14: General Agents – Claude Code & Cowork', icon:'🤖', short:'Ch.14' }
+];
+
+const QUESTIONS = {
+  // ─────────────────────────────────────────────────────────
+  // CHAPTER 12 — Agent Factory Paradigm
+  // ─────────────────────────────────────────────────────────
+  0: {
+    easy: [
+      { q:'What year is described as the "genuine inflection point" for AI development?', opts:['2023','2024','2025','2026'], ans:2, exp:'2025 is when three independent trends converged: AI capability reached production quality, mainstream adoption passed the tipping point, and enterprises bet billions on AI-native architecture.' },
+      { q:'Where were the 2025 ICPC World Finals held?', opts:['London','Tokyo','Baku, Azerbaijan','San Francisco'], ans:2, exp:'The 2025 ICPC World Finals were held in Baku, Azerbaijan — the most prestigious competitive programming competition in the world.' },
+      { q:'How many problems did the OpenAI ensemble solve at the 2025 ICPC World Finals?', opts:['10 of 12','11 of 12','All 12 problems','9 of 12'], ans:2, exp:'OpenAI achieved a perfect score, solving all 12 problems within the 5-hour time limit, surpassing every human team.' },
+      { q:'What is the primary purpose of a General Agent?', opts:['Execute specific workflows efficiently','Handle any task through exploration and discovery','Run in production at scale','Provide specialized customer support'], ans:1, exp:'A General Agent is a multi-purpose reasoning system optimized for exploration and discovery — not for a single specific task.' },
+      { q:'What is Stage 1 of the Agent Maturity Model called?', opts:['Specialization','Production','Incubation','Crystallization'], ans:2, exp:'Stage 1 is the Incubation stage where General Agents transform raw requirements into functional solutions through iteration and exploration.' },
+      { q:'What role does a developer play in the Incubator stage?', opts:['Programmer','Director','Builder','Tester'], ans:1, exp:'In the Incubator, the developer is a Director — setting intent, providing access to files, reviewing work, and course-correcting.' },
+      { q:'What role does a developer play when building Custom Agents?', opts:['Director','Tester','Builder','Consultant'], ans:2, exp:'When creating Custom Agents, the role shifts to Builder — defining purpose, engineering guardrails, and deploying as a product.' },
+      { q:'According to Stack Overflow 2025 Survey, what percentage of developers use AI tools?', opts:['51%','67%','84%','90%'], ans:2, exp:'The Stack Overflow 2025 Developer Survey revealed 84% of professional developers use or plan to use AI coding tools.' },
+      { q:'What is "dynamic planning" in agentic development?', opts:['Planning using pre-defined templates','Agent plans from scratch without templates given just a goal','Automated project management','Planning with fixed scripts'], ans:1, exp:'Dynamic planning means the agent decomposes a goal into subtasks on the fly — no pre-defined scripts or rigid steps needed.' },
+      { q:'How many professional software developers exist globally?', opts:['10 million','20 million','30 million','50 million'], ans:2, exp:'Approximately 30 million professional software developers exist globally, representing about $3 trillion in economic output.' },
+      { q:'What is the estimated size of the global developer economy?', opts:['$1 trillion','$2 trillion','$3 trillion','$5 trillion'], ans:2, exp:'30 million developers × $100,000 average economic value = $3 trillion developer economy.' },
+      { q:'What was Workday\'s acquisition of Sana valued at?', opts:['$500 million','$750 million','$1 billion','$1.1 billion'], ans:3, exp:'In September 2025, Workday announced a $1.1 billion acquisition of Sana, a company building AI-powered workplace agents.' },
+      { q:'What is "premature specialization" in the Agent Factory model?', opts:['Learning AI too quickly','Building a Custom Agent before requirements are stable','Using AI before requirements are clear','Deploying General Agents to production'], ans:1, exp:'Premature specialization means building a Custom Agent before requirements stabilize — leading to over-engineering the wrong solution.' },
+      { q:'What is "perpetual incubation"?', opts:['Never using AI tools','Using General Agents for production workloads indefinitely','Continuously improving Custom Agents','Running tests forever'], ans:1, exp:'Perpetual incubation means staying with General Agents for production workloads — too expensive, inconsistent, and hard to govern at scale.' },
+      { q:'Claude Code, Gemini CLI, Codex CLI, and Goose are tools for which stage?', opts:['Specialization (Custom Agents)','Production deployment','Incubation (General Agents)','Testing and validation'], ans:2, exp:'These tools are designed for the Incubator stage — exploration, iteration, and human-in-the-loop collaboration.' },
+      { q:'What did Google DeepMind\'s Gemini 2.5 Deep Think achieve at ICPC 2025?', opts:['8 of 12 problems','9 of 12 problems','10 of 12 problems — gold-medal performance','All 12 problems'], ans:2, exp:'Google DeepMind\'s Gemini 2.5 Deep Think achieved gold-medal performance, solving 10 of 12 problems.' },
+      { q:'What did the winning human team solve at ICPC 2025?', opts:['9 of 12','10 of 12','11 of 12','All 12'], ans:2, exp:'The winning human team from St. Petersburg State University solved 11 of 12 problems to claim first place among 139 teams.' },
+      { q:'What is the key insight of the Agent Factory model?', opts:['General Agents compete with Custom Agents','General Agents build Custom Agents','Custom Agents replace General Agents','Both work independently'], ans:1, exp:'The key insight: General Agents BUILD Custom Agents. The Incubator discovers what to build; the Specialist executes at scale.' },
+      { q:'What is a "Digital FTE"?', opts:['A freelance developer','An AI employee performing real work autonomously under human supervision','A full-time employee with AI tools','A software testing framework'], ans:1, exp:'A Digital FTE (Full-Time Equivalent) is an AI employee completing tasks end-to-end autonomously — support tickets, reports, analysis.' },
+      { q:'What percentage of YC Winter 2025 startups used AI-generated code as their primary approach?', opts:['10%','15%','20%','25%'], ans:3, exp:'Y Combinator\'s Winter 2025 batch revealed 25% of startups incorporated AI-generated code as their primary development approach.' },
+    ],
+    medium: [
+      { q:'What win rate did Claude Opus 4.1 achieve on the GDPval Benchmark against human expert programmers?', opts:['35%','40.6%','49%','55%'], ans:2, exp:'Claude Opus 4.1 achieved a 49% win rate against human expert programmers on the GDPval Benchmark from September 2025.' },
+      { q:'What was GPT-5\'s win rate on the GDPval Benchmark?', opts:['35%','40.6%','49%','55%'], ans:1, exp:'GPT-5 reached 40.6% win rate on the GDPval Benchmark, while Claude Opus 4.1 reached 49%.' },
+      { q:'What was the typical AI model score on similar benchmarks 18 months before GDPval?', opts:['Below 5%','Below 15%','Around 25%','Around 30%'], ans:1, exp:'18 months before the GDPval results, the best AI models scored below 15% on similar benchmarks — showing exponential improvement.' },
+      { q:'According to DORA 2025, what was the median daily AI tool usage among developers?', opts:['30 minutes','1 hour','2 hours','4 hours'], ans:2, exp:'DORA 2025 showed developers spend 2 hours/day on average with AI tools — roughly one-quarter of their workday.' },
+      { q:'What adoption rate did DORA 2025 report among development professionals?', opts:['75%','84%','90%','95%'], ans:2, exp:'DORA 2025 showed a 90% adoption rate among development professionals (up 14% year-over-year).' },
+      { q:'What unique fact about Problem C at ICPC 2025 is most significant?', opts:['It was the easiest problem','Both OpenAI and Gemini solved it but NO human team did','Only humans solved it','It required visual understanding'], ans:1, exp:'Problem C (liquid distribution through interconnected ducts) was solved by OpenAI and Gemini, but by none of the 139 human teams.' },
+      { q:'What is "context-aware reasoning" in modern General Agents?', opts:['Agent learns from past conversations','Agent reads and understands your actual codebase without you explaining the stack','Agent asks clarifying questions','Agent uses previous chat history'], ans:1, exp:'Modern General Agents scan your repository structure, observe your tech stack, and plan based on your actual patterns — without you needing to explain them.' },
+      { q:'Which is NOT a Director\'s responsibility?', opts:['Set the Intent','Provide Access','Build Guardrails','Course Correct'], ans:2, exp:'Building Guardrails is a Builder responsibility (Custom Agent stage). Directors: Set Intent, Provide Access, Review Work, Course Correct.' },
+      { q:'What percentage of some YC startups\' codebases was AI-generated?', opts:['50%','70%','85%','Up to 95%'], ans:3, exp:'Some YC Winter 2025 startups reported up to 95% of their codebase written by AI systems.' },
+      { q:'Sundar Pichai reported AI increased Google developer productivity by how much — equivalent to how many extra developers?', opts:['5% = 4,000 devs','10% = 8,000 devs','15% = 12,000 devs','20% = 16,000 devs'], ans:1, exp:'10% productivity increase at Google\'s scale is equivalent to adding 8,000 full-time developers overnight.' },
+      { q:'What is "crystallized understanding"?', opts:['Clear documentation','Working prototype + discovered requirements, patterns, edge cases, and architecture decisions','Final production code','Test results only'], ans:1, exp:'Crystallized understanding is the complete output of incubation: working solution + everything learned — patterns, edge cases, requirements — that becomes "genetic material" for the Custom Agent.' },
+      { q:'What drives Custom Agents to have lower per-request cost than General Agents?', opts:['They use cheaper hardware','Predefined workflows and bounded scope reduce token usage','They use smaller models','They don\'t need authentication'], ans:1, exp:'Custom Agents use predefined workflows, optimized prompts, and bounded scope — minimal reasoning overhead means lower cost per request.' },
+      { q:'What is the main advantage of Custom Agents for production vs General Agents?', opts:['More creative','Faster, cheaper, more reliable, and governable','Better at novel problems','Easier to set up'], ans:1, exp:'Custom Agents are designed for production: faster (predefined workflows), cheaper (optimized prompts), reliable (consistent outputs), and governable (built-in guardrails).' },
+      { q:'What is Phase 3 "Specialization" in the Agent Factory evolution?', opts:['Using Claude Code to explore','Writing documentation','Building Custom Agent with SDK using specialized prompts, tools, and guardrails','Deploying to cloud'], ans:2, exp:'Phase 3 is building the Custom Agent using an SDK (like Claude Agent SDK) with specialized prompts, tools with precise interfaces, guardrails, and monitoring.' },
+      { q:'When does the General Agent continue to play a role AFTER a Custom Agent is deployed?', opts:['Never — it\'s replaced','Only for testing','Analyzing failures, improving the Specialist, and building new agents','Only for documentation'], ans:2, exp:'In Phase 5 (Continued Evolution), General Agents analyze escalated queries, redesign knowledge bases, prototype new capabilities, and build adjacent Specialists.' },
+    ],
+    hard: [
+      { q:'Why is the "convergent evidence pattern" more reliable than a single-source validation?', opts:['More sources = more money spent','Independent sources reaching the same conclusion eliminate vendor bias — academia + surveys + startups + financials','More data always produces better models','Convergence proves the technology is perfect'], ans:1, exp:'When independent sources (academic benchmarks, third-party research, startup economics, financial decisions) all point to the same conclusion, it validates the signal beyond what any single source can.' },
+      { q:'How does the "Incubator → Specialist" progression differ from traditional software development?', opts:['Uses different programming languages','You discover solutions through AI-assisted exploration before crystallizing them into engineered production systems','It doesn\'t require testing','It\'s only for startups'], ans:1, exp:'Traditional development engineers directly from requirements. The Agent Factory first discovers/explores the problem space, then engineers the Custom Agent — discovery before engineering.' },
+      { q:'Why does General Agent governance become harder as flexibility increases?', opts:['More capable AI is harder to control','Flexible systems that handle anything resist hard constraints — you can\'t write guardrails for every possible path','Governance software doesn\'t work with AI','Agents have their own goals'], ans:1, exp:'General Agents\' strength (handling anything) is also their governance weakness. Custom Agents\' constraints are by design; General Agents\' openness makes hard limits difficult.' },
+      { q:'What strategic threat does "pay for outcomes not tools" represent for traditional SaaS companies?', opts:['SaaS companies need to add AI features','AI agents eliminate the human "seat" that needed the tool — threatening per-seat licensing models','SaaS is completely dead','Companies should switch to annual contracts'], ans:1, exp:'If AI agents do the cognitive work (CRM data entry, sales follow-up), there\'s no human "seat" needed. Business models must shift from "pay for tools" to "pay for outcomes."' },
+      { q:'How does the Agent Factory model solve the "building the wrong solution" problem?', opts:['By using better specs from the start','Incubation first — using General Agents to discover actual requirements before engineering prevents over-engineering wrong solutions','Testing more','Hiring better developers'], ans:1, exp:'The incubation phase exists specifically to prevent building the wrong thing. You discover requirements through rapid iteration before committing to engineered solutions.' },
+      { q:'What fundamental error does traditional CS education make for AI-native development?', opts:['Too many languages','It teaches skills optimized for humans writing code (syntax mastery) instead of orchestrating AI (spec writing, agent design, validation)','Doesn\'t include AI courses','Too theoretical'], ans:1, exp:'CS curricula teach what mattered when humans wrote code line-by-line. AI-native development needs: specification writing, prompting, agent design, system thinking, and validation.' },
+      { q:'Why does the GDPval improvement from <15% to 49% in 18 months indicate exponential, not incremental, improvement?', opts:['49 is bigger than 15','The improvement rate itself is accelerating — AI went from significantly worse than humans to competitive with experts in under 2 years','Both GPT and Claude improved','Benchmarks always show exponential results'], ans:1, exp:'Going from <15% to 49% means AI went from "significantly worse than human experts" to "competitive with them" in less than 2 years — a compounding rate of improvement.' },
+      { q:'What is the deeper significance of the AIDD opportunity window closing in 2027-2028?', opts:['AI will stop improving','Latecomers will learn someone else\'s settled conventions and compete with those who have already built deep intuition — permanent competitive disadvantage','AI will become free','There won\'t be jobs for developers'], ans:1, exp:'Like Web (1995-2005), Mobile (2008-2015), and Cloud (2010-2018), early movers in AI-native development set conventions and build compound expertise that late adopters cannot catch up to.' },
+      { q:'How does the SaaS disruption analogy explain the shift from "tools to outcomes" pricing?', opts:['SaaS was always too expensive','SaaS solved deployment (no install/updates); AI solves intelligence (does the work directly) — eliminating the need for humans to use the tool','SaaS companies are building AI','Per-user pricing is just a billing preference'], ans:1, exp:'SaaS removed installation friction. AI agents remove the need for humans to do the cognitive work — so the value is in outcomes delivered, not the tool that helps a human do the work.' },
+      { q:'Why can\'t you "skip incubation" when building a Custom Agent?', opts:['Regulations require incubation','Without exploration you miss requirements, build wrong constraints, and ship a brittle system that solves the wrong problem','It takes too long','You need more developers'], ans:1, exp:'Skipping incubation means trying to specify a Custom Agent without the discovery phase. You\'ll miss edge cases, build wrong guardrails, and end up with a production system that doesn\'t solve the real problem.' },
+      { q:'What does the Agent Factory "feedback loop" (Phase 5) mean for the lifecycle of AI products?', opts:['Products are replaced every year','The factory never stops — deployed Custom Agents generate data that feeds back into the Incubator, spawning improvements and new Specialists', 'General Agents retire after Custom Agents are built','Feedback loops are optional'], ans:1, exp:'Phase 5 is the perpetual cycle: production Custom Agents generate usage data → General Agents analyze failures and edge cases → improved or new Specialists are built. The factory continuously evolves.' },
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // CHAPTER 13 — Markdown Writing Instructions
+  // ─────────────────────────────────────────────────────────
+  1: {
+    easy: [
+      { q:'What is markdown?', opts:['A programming language for web development','Structured text that humans can read easily and computers can parse accurately','A database query language','A type of HTML tag'], ans:1, exp:'Markdown is structured text that is both human-readable and machine-parseable — no special software needed to read it, yet it has enough structure for AI to extract meaning.' },
+      { q:'In what year was markdown created?', opts:['1999','2002','2004','2008'], ans:2, exp:'Markdown was created in 2004 by John Gruber, and CommonMark provided a formal specification starting in 2014.' },
+      { q:'Who created markdown?', opts:['Linus Torvalds','Tim Berners-Lee','John Gruber','Jeff Atwood'], ans:2, exp:'Markdown was created in 2004 by John Gruber, designed to be readable as plain text while rendering as formatted content.' },
+      { q:'What symbol is used to create headings in markdown?', opts:['Asterisk (*)','Hash symbol (#)','Dash (-)','Underscore (_)'], ans:1, exp:'Markdown uses the hash symbol (#) to create headings. More hash symbols create smaller headings: # = H1, ## = H2, ### = H3.' },
+      { q:'What does MORE hash symbols mean in markdown headings?', opts:['Larger heading','Same size heading','Smaller heading','Bold heading'], ans:2, exp:'More hash symbols = smaller heading. # creates the largest (H1), ## creates H2, ### creates H3, and so on up to H6.' },
+      { q:'What is Level 1 heading (#) used for?', opts:['Any section title','The document title, used once at the top','Navigation menu','Code examples'], ans:1, exp:'Level 1 (# H1) is the document title and should be used ONCE at the top of the document.' },
+      { q:'What is CommonMark?', opts:['A markdown editor','The base standard / formal specification for markdown (since 2014)','A GitHub extension','A code formatting tool'], ans:1, exp:'CommonMark is the base standard for markdown, providing a formal specification starting in 2014 to standardize markdown behavior across tools.' },
+      { q:'What does GitHub Flavored Markdown (GFM) add to CommonMark?', opts:['Videos and animations','Tables, task lists (- [ ]), and strikethrough (~~text~~)','Database queries','JavaScript execution'], ans:1, exp:'GFM extends CommonMark with tables, task lists using (- [ ]), and strikethrough using (~~text~~). Most tools you\'ll use support GFM.' },
+      { q:'What are the two common markdown file extensions?', opts:['.txt and .rtf','.md and .markdown','.html and .htm','.doc and .docx'], ans:1, exp:'The two common markdown file extensions are .md (standard, recommended) and .markdown (verbose alternative, less common). Both are functionally equivalent.' },
+      { q:'What is the "Intent Layer" in AI-Driven Development (AIDD)?', opts:['Where AI writes code','Layer 1 where you write what you want in structured markdown specifications','The testing layer','The deployment layer'], ans:1, exp:'Layer 1 is the Intent Layer — you write WHAT you want in markdown specifications. Layer 2 is AI Reasoning (planning). Layer 3 is AI Implementation (code generation).' },
+      { q:'What are the 3 layers in AIDD?', opts:['Write, Test, Deploy','Intent (you), Reasoning (AI plans), Implementation (AI codes)','Frontend, Backend, Database','Input, Process, Output'], ans:1, exp:'AIDD has 3 layers: Layer 1 = Intent Layer (you write the spec), Layer 2 = Reasoning Layer (AI translates intent to plan), Layer 3 = Implementation Layer (AI generates code).' },
+      { q:'What is markdown primarily used for in GitHub projects?', opts:['Storing code','README files that explain what the project does','Managing pull requests','Running tests'], ans:1, exp:'Almost every software project on GitHub has a README.md file written in markdown to explain what the project does, how to install it, and how to use it.' },
+      { q:'What does proper heading hierarchy mean?', opts:['Headings must be bold','You cannot skip heading levels (cannot go from H1 directly to H3)','All headings must be on the first page','Headings need spaces around them'], ans:1, exp:'Proper hierarchy means going from broad to specific without skipping levels. You can\'t jump from # (H1) to ### (H3) without ## (H2) in between.' },
+      { q:'What does the "structured" version of a spec do that the "unstructured" version doesn\'t?', opts:['Makes text look prettier','Removes ambiguity so AI knows exactly what each item is — features, steps, constraints are clearly separated','Uses more technical words','Is longer and more detailed'], ans:1, exp:'Structure removes ambiguity. An unstructured paragraph forces AI to guess; structured markdown with headings and lists tells AI exactly what each section means.' },
+      { q:'What is StackEdit?', opts:['A code testing tool','A browser-based markdown editor with live preview — no install needed','A GitHub plugin','A markdown-to-HTML converter'], ans:1, exp:'StackEdit is a browser-based markdown editor with live preview. You can start writing markdown immediately at stackedit.io without any downloads.' },
+      { q:'For a specification, Level 2 (##) headings should be used for what?', opts:['The document title','Main sections like Problem, Features, Installation, Expected Output','Deep technical details','Code comments'], ans:1, exp:'Level 2 (## headings) are for MAIN sections of the document — Problem, Features, Expected Output, Installation, etc.' },
+      { q:'What does "AI is a thinking partner, not an authority" mean?', opts:['AI is smarter than humans','AI makes mistakes — you must verify its feedback against source rules and test specific claims','AI should not be used for learning','You should never ask AI questions'], ans:1, exp:'AI agents make mistakes. When AI reviews your markdown, verify its feedback by checking against the lesson rules, asking for reasoning, testing claims, and cross-referencing.' },
+      { q:'What keyboard shortcut opens markdown preview in VS Code?', opts:['Ctrl+P','Ctrl+Shift+P','Ctrl+Shift+V (Cmd+Shift+V on Mac)','Ctrl+M'], ans:2, exp:'In VS Code, press Ctrl+Shift+V (or Cmd+Shift+V on Mac) to open the live markdown preview panel.' },
+      { q:'What are Levels 5–6 (##### ######) headings best avoided for in specifications?', opts:['They are too large','Deep nesting — if you need them, your document structure is probably too complex','They don\'t render correctly','They are only for code files'], ans:1, exp:'Level 5-6 headings indicate overly complex document structure. In specifications, avoid them — if you need that many levels, restructure your document.' },
+      { q:'Who has "final approval authority" over the specification in AIDD?', opts:['The AI agent','The project manager','The developer/human — the spec represents YOUR intent','The client always'], ans:2, exp:'The specification represents YOUR intent. Even when AI helps draft it, you have final approval authority. The implementation must match the spec, not the other way around.' },
+    ],
+    medium: [
+      { q:'How does structured text specifically improve AI code generation (at the technical level)?', opts:['Makes prompts shorter','Creates clearer token boundaries and "attention cues" so AI\'s attention mechanism can focus on relevant sections','Makes code run faster','Reduces API costs'], ans:1, exp:'LLMs process text as tokens. Structured markdown creates clearer token boundaries. A heading like "## Features" tells the model: "Everything below relates to features." This directs the attention mechanism.' },
+      { q:'In the weather app comparison, what was MISSING from the AI output when given the unstructured description?', opts:['The city input','Humidity, wind speed, error handling, and clear feature separation','The temperature display','The API call'], ans:1, exp:'The unstructured version produced a basic 3-line program missing humidity, wind speed, error handling, and proper feature separation — all present in the structured version.' },
+      { q:'What is the "bridge" between intent and implementation in AIDD?', opts:['The prompt','The markdown specification','The AI model','The programming language'], ans:1, exp:'Your markdown specification is the bridge between what you want (Intent Layer 1) and what gets built (Implementation Layer 3). Clear spec = accurate code.' },
+      { q:'Why must the specification STAY in Layer 1 even when AI helps draft it?', opts:['To keep AI from changing it','The spec is YOUR intent — the authoritative definition of what to build; implementation must match the spec, not the reverse','To avoid copyright issues','Specs must be short'], ans:1, exp:'The specification represents your intent. Even AI-drafted specs need your approval. The implementation (Layer 3) must match the specification, keeping you in control.' },
+      { q:'What is the connection between accessibility for screen readers and heading hierarchy?', opts:['There\'s no connection','Screen readers use heading levels to help visually impaired users navigate — skipping levels breaks this navigation, just as it breaks AI parsing','Screen readers only use H1','Accessibility is separate from markdown'], ans:1, exp:'Proper heading hierarchy serves BOTH accessibility (screen readers navigate by heading level) and AI parsing (AI uses hierarchy to understand document structure and relationships).' },
+      { q:'What does the 4-step verification framework include for AI feedback?', opts:['Copy, paste, test, deploy','Check against source knowledge, ask for reasoning, test specific claims, cross-reference with other sources','Ask 4 different AI tools','Write 4 versions of the same spec'], ans:1, exp:'The 4 verification steps: (1) Check against what you know, (2) Ask AI to explain its reasoning, (3) Test specific claims yourself, (4) Cross-reference with another source or AI.' },
+      { q:'What professional documentation format does markdown enable for architecture decisions?', opts:['Use case diagrams','Architecture Decision Records (ADRs) — structured documents recording architectural decisions in markdown','Gantt charts','ER diagrams'], ans:1, exp:'Architecture Decision Records (ADRs) are professional docs that record why architectural decisions were made. They\'re typically written in markdown for readability and version control.' },
+      { q:'What is the relationship between markdown and Docusaurus?', opts:['Docusaurus replaces markdown','Docusaurus takes markdown files and creates searchable, navigable documentation websites','Docusaurus is a markdown editor','They are competing standards'], ans:1, exp:'Tools like Docusaurus take your markdown files and generate fully-featured documentation websites with search, navigation, and formatting — this book itself uses Docusaurus.' },
+      { q:'Why is markdown preferable to Word documents for specifications in AI-native development?', opts:['Markdown has more features','Markdown is both human-readable AND machine-parseable, version-control friendly (git tracks line-by-line changes), and needs no special software','Word is too expensive','Markdown is more colorful'], ans:1, exp:'Markdown\'s dual nature (human-readable + machine-parseable), git compatibility (line-by-line tracking), and zero-software requirement make it the universal format for AI-native specs.' },
+      { q:'What is "semantic meaning" that markdown structure provides?', opts:['The literal dictionary meaning of words','Structure itself communicates intent — a "## Features" heading tells AI that content below is about features, not just styled text','Mathematical meaning','Color-coded meaning'], ans:1, exp:'Semantic meaning = the structure communicates intent. When you write "## Features," you\'re not just formatting — you\'re telling both humans and AI: "This section is about features."' },
+      { q:'What are the 4 real-world AIDD scenarios where you\'ll use markdown?', opts:['Chatting, emailing, texting, calling','GitHub READMEs, AI agent specifications, documentation sites, AI chat prompts','Code writing, testing, deployment, monitoring','Planning, designing, coding, testing'], ans:1, exp:'The 4 real-world markdown uses in AIDD: (1) GitHub README files, (2) Specifications for AI agents, (3) Documentation sites, (4) Structured AI chat prompts.' },
+      { q:'What does the "folder analogy" for heading hierarchy teach us?', opts:['Files are like headings','Go from broad to specific — just as "Vacation Photos" belongs under "Photos Folder" not "Main Folder", subsections belong under their parent sections','Folders should be alphabetical','Computer file systems use markdown'], ans:1, exp:'The folder analogy: Main Folder (L1) → Photos Folder (L2) → Vacation Photos (L3). You don\'t put Vacation Photos directly under Main Folder; hierarchy flows from broad to specific.' },
+      { q:'Why is numbered list formatting specifically important for procedures vs bullet lists?', opts:['Numbers are more professional','Numbered lists communicate sequence and order — critical for step-by-step procedures where bullet points would lose the sequential meaning','Numbers are easier to read','Bullets use too much space'], ans:1, exp:'When steps must happen in a specific order, numbered lists (1, 2, 3) communicate sequence. Bullet lists don\'t convey order, making them wrong for procedures where sequence matters.' },
+      { q:'What is the practical implication of "same requirements, dramatically different output"?', opts:['AI is unpredictable','The STRUCTURE of how you communicate requirements directly determines the quality and completeness of AI-generated code','All AI tools are the same','Requirements don\'t matter'], ans:1, exp:'The weather app experiment proved: identical requirements, unstructured vs structured, produced dramatically different code. Structure is the primary determinant of AI output quality.' },
+      { q:'What does "markdown as lingua franca" mean for human-AI collaboration?', opts:['Everyone speaks markdown','Markdown is the universal format understood by both humans (readable as plain text) and AI (parseable structure) — bridging intent and machine action','Markdown translates languages','AI learns from markdown'], ans:1, exp:'Markdown is the "common language" — humans can read it without special software, AI can parse its structure for meaning. It\'s the universal bridge between human intent and machine execution.' },
+    ],
+    hard: [
+      { q:'Why is markdown specifically chosen as the "Intent Layer" language over natural language prose or formal specification languages?', opts:['It\'s the most popular format','It balances human readability with machine parseability — prose is too ambiguous for AI, formal specs are too complex for humans to write quickly','It\'s free to use','John Gruber invented it'], ans:1, exp:'Natural language prose is too ambiguous for AI to parse reliably. Formal specs (like UML or Z notation) are too complex for rapid daily use. Markdown hits the sweet spot: readable for humans, parseable for AI.' },
+      { q:'How does the concept of "attention cues" in LLMs explain why structured markdown produces better code than paragraphs?', opts:['Longer text gets more attention','Markdown headings create section-level "attention boundaries" — the transformer attention mechanism can focus on relevant sections rather than treating the entire document as one stream','AI just prefers markdown visually','Shorter prompts work better'], ans:1, exp:'LLMs\' transformer attention mechanism processes text as tokens. Markdown structure (headings, lists) creates boundaries and labels that direct attention — "## Features" signals: focus all related tokens here.' },
+      { q:'What is the deeper implication of "the spec is the authority" for software quality in AIDD?', opts:['Specs must be perfect before coding starts','Since implementation must match the spec, a clear spec is a quality contract — gaps in the spec become bugs in the code, making spec quality the upstream cause of code quality','Developers should write specs, not AI','Specs should be short'], ans:1, exp:'If the spec is the authority, then spec quality directly determines code quality. Vague specs → vague implementations → bugs. Clear, complete specs → accurate implementations. The spec is your quality control upstream.' },
+      { q:'Why do professional teams use markdown for Architecture Decision Records (ADRs) specifically?', opts:['They look professional','ADRs need to be: version-controlled (git-friendly plain text), human-readable (no special app), AI-parseable for future context, and easily diffable — markdown satisfies all four','ADRs are required by law','Markdown has special ADR syntax'], ans:1, exp:'ADRs must survive long-term: git history tracks when decisions changed, plain text is readable without tools, AI can parse them for context, and diffs show exactly what changed. Markdown uniquely satisfies all these requirements.' },
+      { q:'What does the requirement to specify "what the system should NOT do" reveal about AI behavior without constraints?', opts:['AI is dangerous','Without explicit negative constraints, AI interprets missing requirements as permission — it will do what\'s technically possible, not what\'s intended. Explicit exclusions prevent scope creep in AI-generated code','AI doesn\'t understand negation','Constraints make code slower'], ans:1, exp:'AI generates the most complete interpretation of your spec. Without stating "do NOT do X," AI may include X as a reasonable feature. Explicit exclusions are necessary because AI fills gaps with plausible-but-unwanted behavior.' },
+      { q:'How does the transition from "formatting tool" to "specification language" change how you should approach learning markdown?', opts:['You learn more syntax','Instead of learning syntax for decoration, you learn it as a communication protocol — each element (heading, list, code block) is chosen for semantic meaning, not visual effect','You write longer documents','You use fewer elements'], ans:1, exp:'When markdown is a specification language, every element choice is semantic: headings establish section scope, numbered lists signal sequences, code blocks set exact technical requirements. Visual style is secondary to communicative precision.' },
+      { q:'What is the strategic value of markdown\'s "version control friendliness" for team-based AI-native development?', opts:['Git is popular','Markdown files enable git to track specification changes line-by-line — teams can see exactly what requirements changed when, enabling blame/diff for specification errors and AI output mismatches','Teams can share files','Plain text is smaller than Word files'], ans:1, exp:'Git diff on markdown specifications shows EXACTLY which requirements changed, when, and by whom. When AI output doesn\'t match expectations, teams can trace it to specific spec changes — this is specification traceability.' },
+      { q:'Why is the "verification framework" especially critical when AI reviews YOUR OWN markdown specification?', opts:['AI always lies','AI may validate your intent rather than your actual text — it sees what you "meant" not what you "wrote," creating false confidence in specifications that will produce wrong code','AI makes grammatical errors','Verification takes too long'], ans:1, exp:'AI can "fill in the gaps" in your spec charitably, making unclear specs seem fine. If you don\'t verify by testing (ask AI to implement the spec), you may discover ambiguities only in the generated code.' },
+      { q:'What professional pattern does the "specification as authoritative document" create for AI-native development teams?', opts:['Everyone writes code','A single source of truth where all team members, AI agents, and tools reference the same specification — changes to the spec propagate to all implementations, creating coherent evolution','Specs replace code','Only senior devs write specs'], ans:1, exp:'When the spec is authoritative, teams create a hub-and-spoke model: spec at the center, all implementations derived from it. Changing requirements means changing the spec first, then regenerating — clean, traceable evolution.' },
+      { q:'How does the "structured text helps AI at the token level" insight change how you should write AI prompts generally?', opts:['Use fewer words','Structure your prompts with markdown elements (headers for context, bullets for requirements, code blocks for examples) even in conversational AI — the AI processes structure, not just words','Use technical vocabulary','Write longer prompts'], ans:1, exp:'Since LLMs process tokens and use structure for attention, structuring all AI prompts (not just specs) with markdown elements improves comprehension. Even a chat message with bullets vs prose will produce more accurate responses.' },
+      { q:'What is the compounding benefit of consistent markdown structure in large AI-native projects?', opts:['Less typing needed','Each new AI interaction starts with richer context — consistently structured specs accumulate into a semantic knowledge base that AI agents can parse for patterns, constraints, and decisions made throughout the project','Projects complete faster','Less documentation needed'], ans:1, exp:'In large projects, consistently structured markdown files create an indexed semantic knowledge base. AI agents can parse the entire project\'s intent from structured specs, discovering constraints and patterns without you explaining them each time.' },
+      { q:'What fundamental challenge does "AI reads what you wrote, not what you meant" create for AIDD practitioners?', opts:['AI has spelling errors','The precision gap: humans naturally interpret vague language charitably, but AI generates code from literal text — practitioner must develop a "compiler mindset," asking: what would be implemented literally from this spec?','AI doesn\'t understand context','AIDD requires perfect English'], ans:1, exp:'Humans read intent; AI reads text. "Add a search feature" to a human implies obvious UX patterns; to AI it\'s an open-ended instruction. Practitioners must write specs from the AI\'s perspective: what would the text literally produce?' },
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // CHAPTER 14 — General Agents: Claude Code & Cowork
+  // ─────────────────────────────────────────────────────────
+  2: {
+    easy: [
+      { q:'Who started the experiment that led to Claude Code?', opts:['Dario Amodei','Sam Altman','Boris Cherny','Greg Brockman'], ans:2, exp:'In September 2024, an engineer named Boris Cherny joined Anthropic and started an experiment giving Claude direct access to the filesystem — which led to Claude Code.' },
+      { q:'When did Boris Cherny join Anthropic and start the Claude Code experiment?', opts:['January 2024','September 2024','March 2025','January 2026'], ans:1, exp:'Boris Cherny joined Anthropic in September 2024 and gave Claude filesystem access, discovering the "Product Overhang" that unlocked Claude Code.' },
+      { q:'What was the key unlock that made Claude Code revolutionary?', opts:['A new AI model','Direct filesystem access — Claude could now read and understand your actual code','A new programming language','Faster internet connection'], ans:1, exp:'Giving Claude direct access to the filesystem was the key unlock. Claude could now read files, follow imports, understand project structure — without being told about them.' },
+      { q:'What is the "Product Overhang" concept?', opts:['Too many products in the market','Capability already existed inside Claude but was waiting for the right product to unlock it (filesystem access)','Products that are too expensive','Outdated software'], ans:1, exp:'Product Overhang: the capability to be a genuine development partner already existed inside Claude. It didn\'t need to become smarter — it just needed filesystem access to see the code.' },
+      { q:'What was the internal adoption rate of Claude Code at Anthropic on Day 1?', opts:['5%','10%','20%','50%'], ans:2, exp:'When released internally at Anthropic in November 2024, Claude Code had 20% adoption on day one, 50% by day five, and 80%+ daily use by May 2025 launch.' },
+      { q:'What does the OODA Loop stand for?', opts:['Output, Optimize, Deploy, Automate','Observe, Orient, Decide, Act','Order, Organize, Design, Assess','Online, Offline, Debug, Analyze'], ans:1, exp:'OODA Loop = Observe (read the error), Orient (identify root cause), Decide (where to look), Act (read files, run commands). Agentic AI cycles through this until the problem is solved.' },
+      { q:'What is the difference between "passive AI" and "agentic AI"?', opts:['Passive AI is slower','Passive AI gives suggestions from a description; Agentic AI reads your actual files, proposes specific changes, and executes them — it sees your code','Passive AI is cheaper','Passive AI is more accurate'], ans:1, exp:'Passive AI (like ChatGPT without tools): you describe code, get generic suggestions, copy-paste, adapt. Agentic AI (Claude Code): reads your actual files, proposes specific changes, runs tests, iterates.' },
+      { q:'What is Cowork?', opts:['A co-working space app','The same Claude agent architecture as Claude Code but wrapped in a desktop GUI for knowledge workers (not just developers)','A project management tool','A code review platform'], ans:1, exp:'Cowork (launched January 2026) applies Claude Code\'s filesystem access and agentic architecture to non-coding tasks via the Claude Desktop interface — for knowledge workers doing documents, data, organization.' },
+      { q:'When was Cowork launched?', opts:['November 2024','May 2025','September 2025','January 2026'], ans:3, exp:'Anthropic launched Cowork in January 2026 — the same agent architecture as Claude Code but in the familiar Claude Desktop interface for non-developer knowledge workers.' },
+      { q:'What are the Claude subscription options for Claude Code?', opts:['Free and Premium ($10/month)','Pro ($20/month) and Max ($200/month)','Basic ($5/month) and Enterprise only','Free for developers only'], ans:1, exp:'Claude Code offers two paths: Pro ($20/month) and Max ($200/month) using official Anthropic models, or a free path using Claude Code\'s architecture with any LLM backend.' },
+      { q:'What is the recommended installation method for Claude Code on Windows?', opts:['npm install','PowerShell installer','WSL (Windows Subsystem for Linux) — full Linux environment with best compatibility','Git Bash only'], ans:2, exp:'WSL (Windows Subsystem for Linux) is the recommended Windows installation method. Full Linux environment, best compatibility, recommended by Anthropic. Run the curl install script inside WSL.' },
+      { q:'What is the first LLM operational constraint (Constraint 1)?', opts:['LLMs are too slow','LLMs are stateless — they have no memory of previous interactions, starting fresh with every API call','LLMs only work in English','LLMs need internet'], ans:1, exp:'Constraint 1: LLMs are STATELESS. Every API call starts fresh — the model has no memory of previous interactions. What appears as "memory" is the application re-sending the full conversation history.' },
+      { q:'What is the second LLM operational constraint (Constraint 2)?', opts:['LLMs are expensive','LLMs are probabilistic, not deterministic — same input can produce different outputs','LLMs are slow','LLMs can\'t do math'], ans:1, exp:'Constraint 2: LLMs are PROBABILISTIC, not deterministic. They generate responses by sampling from probability distributions, so the same input can yield different (but both valid) outputs.' },
+      { q:'What is an "Agent Skill"?', opts:['A developer\'s personal skill','A SKILL.md document that teaches Claude a precise procedure, reasoning pattern, or domain knowledge — "encoded expertise"','A Python function','An AI certification'], ans:1, exp:'An Agent Skill is "encoded expertise" — a SKILL.md document that gives Claude a precise procedure or domain knowledge. It\'s like a plugin for intelligence that you can create and potentially sell.' },
+      { q:'What is the minimum RAM requirement for Claude Code?', opts:['4GB','8GB minimum','16GB','32GB'], ans:1, exp:'Claude Code requires 8GB RAM minimum. For macOS, it requires macOS 13 (Ventura) or later. For Windows, Windows 10 or later.' },
+      { q:'What does the terminal command "claude --version" verify?', opts:['Lists all files','Checks Claude Code installation and shows the version number','Opens Claude Code interface','Creates a new project'], ans:1, exp:'"claude --version" verifies your Claude Code installation is working and shows the current version number. Claude Code auto-updates frequently so your version number will change.' },
+      { q:'What is the Homebrew installation command for Claude Code on macOS?', opts:['npm install claude-code','brew install claude-code','brew install --cask claude-code','pip install claude-code'], ans:2, exp:'"brew install --cask claude-code" installs Claude Code via Homebrew on macOS. The --cask flag is used for GUI/binary applications, installing to /Applications.' },
+      { q:'What percentage of Claude Code itself was written by Claude Code?', opts:['About 50%','About 75%','About 90%','100%'], ans:2, exp:'Approximately 90% of Claude Code was written by Claude Code itself — not because AI is suddenly brilliant, but because filesystem access gave it the context needed for complex work.' },
+      { q:'How much annual revenue did Claude Code generate by mid-2025?', opts:['$100M+','$250M+','$500M+','$1B+'], ans:2, exp:'By mid-2025, Claude Code generated $500M+ annual run-rate — almost entirely from word-of-mouth. By November 2025, it reached $1B annual run-rate.' },
+      { q:'What interface does Claude Code use?', opts:['Web browser','Mobile app','Terminal/CLI (command-line interface)','Desktop GUI'], ans:2, exp:'Claude Code runs in the terminal/CLI. This is where the agentic model works — reading files directly, running tests, seeing errors, and iterating in real time.' },
+    ],
+    medium: [
+      { q:'What productivity metric did Anthropic engineers achieve with Claude Code compared to typical companies?', opts:['2 PRs/day vs 1 at typical companies','5 PRs/day vs 1-2 at typical companies','10 PRs/day vs 3','No significant difference'], ans:1, exp:'Anthropic engineers averaged 5 pull requests per day using Claude Code, compared to 1-2 at typical companies — a dramatic productivity multiplier from agentic filesystem access.' },
+      { q:'How does Claude Code\'s OODA Loop differ from how ChatGPT responds?', opts:['ChatGPT uses OODA too','Claude Code cycles through OODA until the goal is achieved — running code, seeing failures, fixing them; ChatGPT gives a single response and can\'t verify suggestions','ChatGPT loops faster','There\'s no real difference'], ans:1, exp:'ChatGPT (passive): single response, can\'t verify. Claude Code (agentic OODA): cycles Observe → Orient → Decide → Act repeatedly, running tests, seeing actual errors, fixing them until the goal is achieved.' },
+      { q:'What is the "Product Overhang" concept more broadly applicable to?', opts:['Just Claude Code','Other AI models may have latent capabilities waiting for the right product interface to unlock them — filesystem access was the catalyst for Claude Code, other interfaces may unlock other models','Only Anthropic products','Already fully exploited capabilities'], ans:1, exp:'Product Overhang pattern: AI capability exists but waits for the right product. Claude Code needed filesystem access; other latent capabilities (audio generation, 3D reasoning) may wait for similar interface unlocks.' },
+      { q:'Why does Claude Code work in the terminal rather than a chat interface?', opts:['Terminal is more secure','The terminal allows direct filesystem reading, test execution, and command running — all needed for the agentic feedback loop; chat UIs don\'t have this access','Terminal is easier to build','Developers prefer terminal'], ans:1, exp:'The terminal is where the agentic loop lives: Claude reads files directly (no copy-paste), runs tests, sees actual failures, and modifies code in the same environment. Chat interfaces can\'t provide this direct system access.' },
+      { q:'What makes Agent Skills potentially valuable as intellectual property?', opts:['Skills use proprietary algorithms','Your domain expertise encoded as a SKILL.md is reproducible and sellable — skills for financial audits, legal review, or sales automation can be sold to others who need that expertise','Skills are expensive to make','Skills are patentable'], ans:1, exp:'A SKILL.md file encoding your domain expertise (financial audit procedures, legal contract review, sales analysis) IS your intellectual property. You created the expertise; encoded as a skill, it can be sold or licensed.' },
+      { q:'What is the practical impact of LLMs being "stateless" on long projects?', opts:['Projects run slower','You must maintain project state in persistent files (SPEC.md, PROJECT_CONTEXT.md, AGENTS.md) that are re-loaded each session — the model can\'t remember yesterday\'s decisions','Projects can\'t use AI','Each session is independent on purpose'], ans:1, exp:'Statelessness means long projects need explicit state management: SPEC.md for requirements, AGENTS.md for persistent context, PROJECT_CONTEXT.md for decisions. These files are re-injected each session to restore "memory."' },
+      { q:'What does the "temperature" parameter control in LLMs?', opts:['Processor temperature','How much randomness influences output — 0 = most deterministic (repetitive), 0.7 = balanced, 1.0+ = creative but potentially incoherent','Response length','Cost per token'], ans:1, exp:'Temperature controls randomness in token selection. Temperature 0 = always picks highest-probability token (deterministic but repetitive). 0.7 = balanced. 1.0+ = high creativity but risk of incoherence.' },
+      { q:'What is the practical implication of LLMs being probabilistic for software teams?', opts:['AI-generated code is always wrong','Validation is mandatory — same spec run twice may produce different implementations; you must verify AI output meets requirements regardless of which valid variant was generated','AI code always looks the same','Probabilistic means random quality'], ans:1, exp:'Probabilistic outputs mean validation is non-negotiable. The same spec might produce two different (both valid) implementations. Tests define the invariants that must hold regardless of which variant AI chose.' },
+      { q:'What is the key difference between Claude Code (developer) and Cowork (knowledge worker)?', opts:['Different AI models','Same underlying architecture (Claude Agent SDK + filesystem access) but different interfaces — CLI terminal for developers, desktop GUI for knowledge workers','Cowork is less powerful','Claude Code costs more'], ans:1, exp:'Claude Code and Cowork share the same foundation: Claude Agent SDK + filesystem access + agentic execution. The difference is purely interface: Claude Code = terminal (developers), Cowork = desktop GUI (knowledge workers).' },
+      { q:'What does "NPM installation is deprecated" mean for Claude Code setup in 2026?', opts:['npm doesn\'t exist anymore','The npm/Node.js installation method is no longer recommended — use the native installer (curl script) or Homebrew instead for better stability','npm is too slow','npm version is different'], ans:1, exp:'As of 2026, npm installation of Claude Code is deprecated. The recommended path is the native installer (curl -fsSL https://claude.ai/install.sh | bash) or Homebrew on macOS.' },
+      { q:'How does Claude Code\'s filesystem access change the "copy-paste friction" problem of traditional AI tools?', opts:['Copy-paste is still needed','Claude Code reads your actual files directly — no copy-paste needed. It sees errors directly, modifies the codebase in place, and runs tests in your actual environment','Claude Code is just faster copy-paste','File reading is automatic everywhere'], ans:1, exp:'Traditional AI tools require copy-paste cycles: you copy code → describe it → paste AI suggestion → adapt → test → repeat. Claude Code eliminates this by seeing your code directly and iterating in your actual environment.' },
+      { q:'Why do specifications need to be re-provided to LLMs if they were given in a previous session?', opts:['Specs change frequently','LLMs are stateless — the model starts fresh each API call with no memory of previous sessions; specifications from yesterday are completely forgotten unless explicitly provided again','It\'s a security feature','Previous session data is deleted'], ans:1, exp:'LLM statelessness means every session starts blank. No matter how detailed last session\'s spec was, today\'s session knows nothing about it. AGENTS.md and persistent spec files solve this by making context re-injectable.' },
+      { q:'What is the Alpine Linux special requirement for Claude Code installation?', opts:['A different version of Claude','Installing C++ runtime libraries (libgcc, libstdc++) and ripgrep, then setting USE_BUILTIN_RIPGREP=0','A paid enterprise plan','Special network configuration'], ans:1, exp:'Alpine Linux requires: "apk add libgcc libstdc++ ripgrep" then "export USE_BUILTIN_RIPGREP=0". Alpine\'s minimal base doesn\'t include the C++ runtime libraries Claude Code needs.' },
+      { q:'What is the "free path" alternative for Claude Code if you don\'t want the paid Anthropic subscription?', opts:['There is no free alternative','Use Claude Code\'s agentic architecture with any LLM backend (Gemini, GPT, local models) through API routing — same Claude Code skills work with any model','Use an older version','Use ChatGPT instead'], ans:1, exp:'The free/minimal path lets you use Claude Code\'s architecture (subagents, skills, MCP, hooks) with ANY LLM backend through production-grade API routing — you don\'t need Claude models specifically.' },
+      { q:'What does "Test-Driven Development takes on new importance" mean in the context of probabilistic LLMs?', opts:['Tests are optional with AI','Tests define invariants that must hold regardless of which probabilistic implementation AI generates — tests become quality contracts for AI output, not just bug-finding tools','AI writes tests automatically','TDD is now easier'], ans:1, exp:'With probabilistic AI, tests are your verification layer. You can\'t predict exactly what code AI generates, but you can define what it MUST do. Tests enforce the deterministic requirements on probabilistic outputs.' },
+      { q:'What PR throughput increase did Anthropic see as the Claude Code team grew from 2 to 10 people?', opts:['No change','PR throughput dropped with more people','PR throughput jumped 67% even as team grew from 2 to 10 people','PR throughput doubled'], ans:2, exp:'Even as the Claude Code team grew from 2 to 10 people, PR throughput jumped 67% — demonstrating that agentic AI tools produce super-linear productivity gains, not just additive ones.' },
+    ],
+    hard: [
+      { q:'What is the deeper significance of "Claude explored the codebase without explicit instruction" when given filesystem access?', opts:['It shows AI is too autonomous','Emergent behavior: when capability meets access, intelligence manifests naturally without explicit programming — the model\'s reasoning capability was always there; filesystem access was the missing prerequisite','Claude was programmed to explore','It means AI will always explore everything'], ans:1, exp:'The emergent behavior (exploring without instruction) reveals a principle: intelligence + access = emergent agency. The model\'s reasoning existed; filesystem access was the catalyst that unlocked agent-level behavior without explicit programming.' },
+      { q:'Why does the "agentic vs passive" distinction matter more than "better AI vs worse AI" for practical productivity?', opts:['Better AI is always more productive','Architecture matters more than model capability — a good model in a passive architecture produces worse outcomes than a slightly weaker model in an agentic architecture with filesystem access','Passive AI is always better','They produce identical outcomes'], ans:1, exp:'Claude Code\'s productivity gains came from architecture (agentic loop + filesystem access), not model improvements. A "consultant on the phone" vs "pair programmer at your screen" — same intelligence, dramatically different output because of access architecture.' },
+      { q:'What is the strategic implication of the statelessness constraint for AI product design?', opts:['AI products should avoid long conversations','Products must be designed to inject context automatically — AGENTS.md, project specs, memory systems exist to solve statelessness; the constraint shapes the entire product architecture of AI-native tools','LLMs should have better memory','Users must remember everything'], ans:1, exp:'Statelessness is not a limitation to work around — it\'s a design constraint that shapes product architecture. AGENTS.md, context injection, vector databases, and memory systems all exist because of statelessness. Smart products make context injection invisible to users.' },
+      { q:'How does the probabilistic nature of LLMs affect software architecture decisions in AI-native applications?', opts:['Always use deterministic AI','Build validation layers, output schemas, and type checking as first-class architectural concerns — probabilistic outputs require deterministic boundaries, making validation infrastructure more important than in traditional software','Use temperature 0 always','Test more manually'], ans:1, exp:'Probabilistic outputs demand architectural responses: output schemas constrain what AI can generate, type checking validates structure, integration tests verify behavior. The architecture must compensate for probabilistic content with deterministic boundaries.' },
+      { q:'What is the compound value of building an Agent Skills library over time?', opts:['Skills become outdated quickly','Each Skill encodes domain expertise that compounds — the first Skill teaches Claude a procedure; the hundredth Skill means Claude has a complete domain knowledge base encoding years of professional expertise, all re-usable and sellable','Skills are too specific to be reused','More skills = more confusion'], ans:1, exp:'Skills compound: each SKILL.md adds to a knowledge base. A library of 100 skills represents years of encoded expertise — every new project benefits from previous skills. It\'s an appreciating IP asset that grows with each engagement.' },
+      { q:'Why is the "90% of Claude Code written by Claude Code" fact more strategically significant than it appears?', opts:['It proves AI is better than humans','It validates the Agent Factory model empirically: a General Agent (Claude Code) was used to build itself — the incubation→specialization cycle worked well enough to produce a production tool that outperforms human-only development','It means Anthropic has no engineers','It\'s just a marketing claim'], ans:1, exp:'This fact proves the Agent Factory model in practice. Anthropic used Claude Code (General Agent) to build Claude Code (increasingly becoming a Custom-Agent-like system). The factory model produced its own tooling — recursive, empirical validation.' },
+      { q:'What does the rapid revenue growth of Claude Code ($500M by mid-2025, $1B by November 2025) indicate about AI tool adoption patterns?', opts:['Claude Code was massively advertised','Word-of-mouth dominates AI tool adoption — demonstrated productivity (5 PRs/day, real code on your filesystem) creates organic spread; traditional marketing is less effective than actual results developers share','Revenue doesn\'t matter for AI tools','All AI tools grow this fast'], ans:1, exp:'$500M to $1B in ~6 months almost entirely from word-of-mouth signals that genuine productivity gains drive AI adoption more than marketing. Developers sharing real results (5 PRs/day, 90% codebase) created viral organic growth.' },
+      { q:'How does the "iteration is the norm, not the exception" insight from probabilistic LLMs change project planning?', opts:['Projects take longer with AI','Build 1-2 refinement cycles into every specification task — not as a failure mode but as standard workflow; planning for probabilistic iteration produces more accurate estimates and less frustration than expecting single-pass perfection','AI should always be right first time','Iteration means starting over'], ans:1, exp:'Accepting probabilistic outputs means planning for iteration cycles. 95% correct first output + 1 refinement = 100% correct planned workflow. Developers who expect single-pass perfection get frustrated; those who plan for iteration succeed.' },
+      { q:'What is the architectural significance of Cowork using the same Claude Agent SDK as Claude Code?', opts:['It was cheaper to build','One underlying architecture serving two user segments demonstrates the Agent Factory model\'s scalability — the same agentic infrastructure can be surfaced through different interfaces for different audiences without rebuilding the core','Cowork was rushed to market','Both need filesystem access'], ans:1, exp:'Same SDK, different interfaces is the Agent Factory model applied to products: the core agentic capability (filesystem access + Claude reasoning) is the Custom Agent-like core; Claude Code (CLI) and Cowork (GUI) are specialized product surfaces built on it.' },
+      { q:'Why does "context must be explicitly provided" from the statelessness constraint make AGENTS.md files architecturally critical?', opts:['AGENTS.md is just documentation','AGENTS.md is the statelessness solution — it\'s the persistent context file injected at every interaction, encoding project preferences, coding style, and context that would otherwise be lost each session. Without it, every session is a cold start','AGENTS.md is optional','Context can be provided any way'], ans:1, exp:'AGENTS.md exists BECAUSE of statelessness. It\'s not documentation — it\'s the mechanism that converts stateless API calls into apparently stateful interactions. Every session, Claude reads AGENTS.md to restore the context that statelessness erased.' },
+      { q:'What does the emergence of Cowork (January 2026) suggest about the future trajectory of agentic AI products?', opts:['AI is moving away from developers','The same agentic architecture pattern — filesystem access + reasoning + tools — will be re-surfaced for every professional domain, creating a family of specialized agents all built on the same core foundation, serving accountants, lawyers, marketers as Claude Code serves developers','Cowork will replace Claude Code','Only non-developers need AI'], ans:1, exp:'Cowork is the template: take the agentic core (filesystem access + agent loop), add domain-appropriate interface and tools, and surface it to a new professional audience. The same pattern will repeat for legal, medical, financial, and other knowledge-worker domains.' },
+    ]
+  }
+};
+
+// ============================================================
+//  APP STATE
+// ============================================================
+let currentChapter = 0;
+let currentMode = 'easy';
+let quizQuestions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let skipped = 0;
+let timerInterval = null;
+let timeLeft = 0;
+let totalTime = 0;
+let selectedAnswers = [];
+let answerLocked = false;
+let pendingResult = null;
+let lbFilter = 'all';
+
+const MODE_CONFIG = {
+  easy:   { count:10, minutes:20 },
+  medium: { count:15, minutes:25 },
+  hard:   { count:20, minutes:30 }
+};
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if(name === 'home' || name === 'chapters' || name === 'mode' || name === 'quiz' || name === 'results') {
+    if(name === 'home') document.getElementById('nav-home').classList.add('active');
+    if(name === 'chapters' || name === 'mode' || name === 'quiz') document.getElementById('nav-quizzes').classList.add('active');
+    if(name === 'results') document.getElementById('nav-quizzes').classList.add('active');
+  }
+  if(name === 'leaderboard') {
+    document.getElementById('nav-leaderboard').classList.add('active');
+    renderLeaderboard();
+  }
+  if(name === 'home') updateStats();
+  toggleSidebar(false);
+}
+
+function toggleSidebar(force) {
+  const s = document.getElementById('sidebar');
+  const o = document.getElementById('sidebarOverlay');
+  if(window.innerWidth > 768) return;
+  const open = force === undefined ? !s.classList.contains('open') : force;
+  s.classList.toggle('open', open);
+  o.classList.toggle('open', open);
+}
+
+// ============================================================
+//  CHAPTER & MODE SELECTION
+// ============================================================
+function selectChapter(idx) {
+  currentChapter = idx;
+  document.getElementById('mode-chapter-title').textContent = CHAPTERS[idx].name;
+  showScreen('mode');
+}
+
+function startQuiz(mode) {
+  currentMode = mode;
+  const pool = QUESTIONS[currentChapter][mode];
+  const count = MODE_CONFIG[mode].count;
+  quizQuestions = shuffle([...pool]).slice(0, count);
+  currentQuestionIndex = 0;
+  score = 0;
+  skipped = 0;
+  selectedAnswers = [];
+  timeLeft = MODE_CONFIG[mode].minutes * 60;
+  totalTime = timeLeft;
+
+  document.getElementById('quiz-chapter-label').textContent = CHAPTERS[currentChapter].name;
+  document.getElementById('quiz-mode-label').textContent = mode.charAt(0).toUpperCase() + mode.slice(1) + ' Mode';
+  document.getElementById('qTotal').textContent = count;
+
+  showScreen('quiz');
+  renderQuestion();
+  startTimer();
+}
+
+// ============================================================
+//  QUIZ LOGIC
+// ============================================================
+function renderQuestion() {
+  if(currentQuestionIndex >= quizQuestions.length) { finishQuiz(); return; }
+  const q = quizQuestions[currentQuestionIndex];
+  answerLocked = false;
+
+  document.getElementById('progressFill').style.width = (currentQuestionIndex / quizQuestions.length * 100) + '%';
+  document.getElementById('qCurrent').textContent = currentQuestionIndex + 1;
+  document.getElementById('qNum').textContent = 'QUESTION ' + (currentQuestionIndex + 1);
+  document.getElementById('qText').textContent = q.q;
+
+  const fb = document.getElementById('feedbackBox');
+  fb.classList.remove('show','correct','wrong');
+
+  document.getElementById('skipBtn').style.display = '';
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const container = document.getElementById('optionsContainer');
+  const labels = ['A','B','C','D'];
+  container.innerHTML = q.opts.map((opt, i) =>
+    `<div class="option" id="opt${i}" onclick="selectOption(${i})">
+      <div class="opt-label">${labels[i]}</div>
+      <span>${opt}</span>
+    </div>`
+  ).join('');
+}
+
+function selectOption(idx) {
+  if(answerLocked) return;
+  answerLocked = true;
+  const q = quizQuestions[currentQuestionIndex];
+  const correct = q.ans;
+
+  // Record
+  selectedAnswers.push({ q, selected: idx, correct });
+
+  // Style options
+  document.querySelectorAll('.option').forEach(o => o.classList.add('disabled'));
+  document.getElementById('opt' + idx).classList.add(idx === correct ? 'correct' : 'wrong');
+  if(idx !== correct) document.getElementById('opt' + correct).classList.add('correct');
+
+  // Feedback
+  const fb = document.getElementById('feedbackBox');
+  const ft = document.getElementById('feedbackTitle');
+  const ftx = document.getElementById('feedbackText');
+  if(idx === correct) {
+    score++;
+    ft.className = 'feedback-title correct';
+    ft.textContent = '✅ Correct!';
+    fb.className = 'feedback-box show correct';
+  } else {
+    ft.className = 'feedback-title wrong';
+    ft.textContent = '❌ Incorrect — Correct answer: ' + ['A','B','C','D'][correct];
+    fb.className = 'feedback-box show wrong';
+  }
+  ftx.textContent = q.exp;
+
+  document.getElementById('skipBtn').style.display = 'none';
+  document.getElementById('nextBtn').style.display = '';
+}
+
+function skipQuestion() {
+  if(answerLocked) return;
+  skipped++;
+  selectedAnswers.push({ q: quizQuestions[currentQuestionIndex], selected: -1, correct: quizQuestions[currentQuestionIndex].ans });
+  currentQuestionIndex++;
+  renderQuestion();
+}
+
+function nextQuestion() {
+  currentQuestionIndex++;
+  renderQuestion();
+}
+
+// ============================================================
+//  TIMER
+// ============================================================
+function startTimer() {
+  clearInterval(timerInterval);
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if(timeLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+  document.getElementById('timerDisplay').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  const box = document.getElementById('timerBox');
+  box.className = 'timer-box' + (timeLeft < 60 ? ' danger' : timeLeft < 180 ? ' warning' : '');
+}
+
+// ============================================================
+//  FINISH & RESULTS
+// ============================================================
+function finishQuiz() {
+  clearInterval(timerInterval);
+  const total = quizQuestions.length;
+  const wrong = total - score - skipped;
+  const pct = Math.round(score / total * 100);
+  const timeUsed = totalTime - timeLeft;
+
+  document.getElementById('qCurrent').textContent = total;
+  document.getElementById('progressFill').style.width = '100%';
+
+  // Score display
+  const ring = document.getElementById('scoreRing');
+  const pctEl = document.getElementById('scorePct');
+  pctEl.textContent = pct + '%';
+  const gradeClass = pct >= 80 ? 'grade-a' : pct >= 60 ? 'grade-b' : pct >= 40 ? 'grade-c' : 'grade-d';
+  pctEl.className = 'score-pct ' + gradeClass;
+
+  // Title
+  const titles = ['Keep Practicing! 💪','Good Effort! 👍','Well Done! 🌟','Excellent! 🎉','Perfect Score! 🏆'];
+  const ti = pct >= 95 ? 4 : pct >= 80 ? 3 : pct >= 60 ? 2 : pct >= 40 ? 1 : 0;
+  document.getElementById('resultsTitle').textContent = titles[ti];
+  document.getElementById('resultsSub').textContent = `${CHAPTERS[currentChapter].name} — ${currentMode.charAt(0).toUpperCase()+currentMode.slice(1)} Mode`;
+  document.getElementById('resCorrect').textContent = score;
+  document.getElementById('resWrong').textContent = wrong;
+  document.getElementById('resSkipped').textContent = skipped;
+  document.getElementById('resTime').textContent = formatTime(timeUsed);
+  document.getElementById('reviewSection').style.display = 'none';
+
+  showScreen('results');
+
+  if(pct >= 50) confetti();
+
+  // Leaderboard
+  pendingResult = { chapter: currentChapter, mode: currentMode, score, total, pct, timeUsed, date: new Date().toLocaleDateString() };
+  if(pct >= 60) openModal();
+  else saveScore('Anonymous');
+
+  // Update attempts
+  const att = parseInt(localStorage.getItem('attempts') || 0) + 1;
+  localStorage.setItem('attempts', att);
+  updateStats();
+}
+
+function formatTime(s) {
+  if(s < 60) return s + 's';
+  return Math.floor(s/60) + 'm ' + (s%60) + 's';
+}
+
+// ============================================================
+//  REVIEW
+// ============================================================
+function toggleReview() {
+  const sec = document.getElementById('reviewSection');
+  if(sec.style.display === 'none') {
+    sec.style.display = 'block';
+    renderReview();
+  } else {
+    sec.style.display = 'none';
+  }
+}
+
+function renderReview() {
+  const labels = ['A','B','C','D'];
+  document.getElementById('reviewList').innerHTML = selectedAnswers.map((item, i) => {
+    const isCorrect = item.selected === item.correct;
+    const isSkipped = item.selected === -1;
+    return `
+      <div class="review-item ${isCorrect ? 'r-correct' : 'r-wrong'}">
+        <div class="review-q">${i+1}. ${item.q.q}</div>
+        <div class="review-opts">
+          ${item.q.opts.map((opt, oi) => {
+            let cls = '';
+            if(oi === item.correct) cls = 'r-correct';
+            else if(oi === item.selected && !isCorrect) cls = 'r-selected-wrong';
+            return `<div class="review-opt ${cls}">${labels[oi]}. ${opt}${oi===item.correct?' ✓':''}${oi===item.selected&&!isCorrect?' ✗':''}</div>`;
+          }).join('')}
+        </div>
+        ${isSkipped ? '<div class="review-expl">⏭️ Skipped</div>' : ''}
+        <div class="review-expl">💡 ${item.q.exp}</div>
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
+//  LEADERBOARD
+// ============================================================
+function saveScore(name) {
+  if(!pendingResult) return;
+  const entry = { name, ...pendingResult };
+  const lb = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+  lb.push(entry);
+  lb.sort((a,b) => b.pct - a.pct || a.timeUsed - b.timeUsed);
+  localStorage.setItem('leaderboard', JSON.stringify(lb.slice(0, 100)));
+  pendingResult = null;
+}
+
+function renderLeaderboard() {
+  const lb = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+  const filtered = lbFilter === 'all' ? lb : lb.filter(e => e.chapter === lbFilter);
+  const list = document.getElementById('lbList');
+  if(!filtered.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">No scores yet. Complete a quiz to appear here!</div>';
+    return;
+  }
+  list.innerHTML = filtered.map((e, i) => {
+    const rnk = i+1;
+    const rc = rnk===1?'r1':rnk===2?'r2':rnk===3?'r3':'rn';
+    const ic = rnk<=3?['🥇','🥈','🥉'][rnk-1]:rnk;
+    return `<div class="lb-item ${rnk<=3?'top'+rnk:''}">
+      <div class="lb-rank ${rc}">${ic}</div>
+      <div class="lb-info">
+        <div class="lb-name">${e.name}</div>
+        <div class="lb-detail">${CHAPTERS[e.chapter].short} · ${e.mode} · ${e.score}/${e.total} · ${e.date}</div>
+      </div>
+      <div class="lb-score">${e.pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function filterLB(f) {
+  lbFilter = f;
+  document.querySelectorAll('#lbFilters .btn').forEach(b => b.className = 'btn btn-outline');
+  event.target.className = 'btn btn-primary';
+  renderLeaderboard();
+}
+
+function clearLeaderboard() {
+  if(confirm('Clear all leaderboard data?')) {
+    localStorage.removeItem('leaderboard');
+    renderLeaderboard();
+  }
+}
+
+// ============================================================
+//  MODAL
+// ============================================================
+function openModal() {
+  document.getElementById('nameModal').classList.add('open');
+  setTimeout(() => document.getElementById('nameInput').focus(), 100);
+}
+function closeModal() {
+  document.getElementById('nameModal').classList.remove('open');
+  saveScore('Anonymous');
+}
+function saveName() {
+  const name = document.getElementById('nameInput').value.trim() || 'Anonymous';
+  document.getElementById('nameModal').classList.remove('open');
+  saveScore(name);
+}
+document.getElementById('nameInput').addEventListener('keydown', e => { if(e.key==='Enter') saveName(); });
+
+// ============================================================
+//  UTILITIES
+// ============================================================
+function shuffle(arr) {
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+
+function confetti() {
+  const colors = ['#7c3aed','#a855f7','#06b6d4','#10b981','#f59e0b','#ef4444','#fff'];
+  for(let i=0;i<60;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `left:${Math.random()*100}vw;background:${colors[i%colors.length]};animation-delay:${Math.random()*1.5}s;animation-duration:${2+Math.random()}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>0.5?'50%':'2px'}`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+function toggleTheme() {
+  const isDark = !document.body.classList.contains('light');
+  document.body.classList.toggle('light', isDark);
+  document.getElementById('themeIcon').textContent = isDark ? '🌙' : '☀️';
+  document.getElementById('themeLabel').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+}
+
+function updateStats() {
+  document.getElementById('stat-attempts').textContent = localStorage.getItem('attempts') || 0;
+}
+
+// Init
+updateStats();
+</script>
+</body>
+</html>
