@@ -931,8 +931,11 @@ function selectChapter(idx) {
 function startQuiz(mode) {
   currentMode = mode;
   const pool = QUESTIONS[currentChapter][mode];
-  const count = MODE_CONFIG[mode].count;
-  quizQuestions = shuffle([...pool]).slice(0, count);
+  const count = Math.min(MODE_CONFIG[mode].count, pool.length);
+  quizQuestions = shuffle([...pool]).slice(0, count).map(q => {
+    const idxs = shuffle([0, 1, 2, 3]);
+    return { ...q, opts: idxs.map(i => q.opts[i]), ans: idxs.indexOf(q.ans) };
+  });
   currentQuestionIndex = 0;
   score = 0;
   skipped = 0;
